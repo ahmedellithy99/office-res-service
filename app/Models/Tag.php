@@ -18,6 +18,6 @@ class Tag extends Model
 
     public function offices():BelongsToMany
     {
-        return $this->belongsToMany(Office::class);
+        return $this->belongsToMany(Office::class, 'offices_tags');
     }
 }

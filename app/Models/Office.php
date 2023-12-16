@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,7 +32,7 @@ class Office extends Model
 
     public function tags():BelongsToMany
     {
-        return $this->belongsToMany(Tag::class);
+        return $this->belongsToMany(Tag::class , 'offices_tags');
     }
 
     public function user():BelongsTo
@@ -48,7 +49,5 @@ class Office extends Model
     {
         return $this->morphMany(Image::class, 'resource');
     }
-
-
 
 }

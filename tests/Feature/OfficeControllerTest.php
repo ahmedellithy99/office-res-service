@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Image;
 use App\Models\Office;
 use App\Models\Reservation;
+use App\Models\Tag;
 use App\Models\User;
 use Database\Factories\OfficeFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,7 +15,7 @@ use Tests\TestCase;
 class OfficeControllerTest extends TestCase
 {
 
-    // use RefreshDatabase;
+    use RefreshDatabase;
     /**
      * @test
      */
@@ -25,8 +27,6 @@ class OfficeControllerTest extends TestCase
         Office::factory(2)->create();
         
         $response = $this->get('/api/offices');
-
-        $response->dump();
         
         $this->assertNotNull($response->json('data')[0]['id']);
         $this->assertCount(2, $response->json('data'));
@@ -45,6 +45,8 @@ class OfficeControllerTest extends TestCase
         Office::factory(2)->create();
         
         $response = $this->get('/api/offices');
+
+        $response->dump();
         
         $this->assertNotNull($response->json('data')[0]['id']);
         $this->assertNotNull($response->json('meta'));
@@ -81,7 +83,7 @@ class OfficeControllerTest extends TestCase
      * @test
      */
 
-    public function itListsOnlyHostedUsers(): void
+    public function itListsOnlyUsers(): void
     {
 
         // $this->withoutExceptionHandling();
@@ -94,18 +96,14 @@ class OfficeControllerTest extends TestCase
         Office::factory()->create(['user_id' => $user->id]);
 
         
-        $response = $this->get('/api/offices?host_id='.$user->id);
-        
-
+        $response = $this->get('/api/offices?user_id='.$user->id);
         
         $this->assertCount(5, $response->json('data'));
-        
-        
 
     }
 
     
-     /**
+    /**
      * @test
      */
 
@@ -123,11 +121,90 @@ class OfficeControllerTest extends TestCase
         
         //  Office::factory()->create(['user_id' => $user->id]);
         
-        $response = $this->get('/api/offices?user_id='.$user->id);
+        $response = $this->get('/api/offices?visitor_id='.$user->id);
         
 
         $this->assertCount(2, $response->json('data'));
 }
+
+    /**
+     * @test
+     */
+
+    public function itIncludesUsersImagesTags():void
+    {
+        $user = User::factory()->create();
+        $tag = Tag::factory()->create();
+        $office = Office::factory()->for($user)->create();
+        // $image = Image::factory()->create();
+        
+        $office->tags()->attach($tag);
+        $office->images()->create(['path' => 'image.pps']);
+
+        
+        
+        $response = $this->get('/api/offices');
+
+
+        
+        $this->assertIsArray($response->json('data')[0]['tags']);
+        $this->assertIsArray($response->json('data')[0]['images']);
+        $this->assertEquals($user->id ,$response->json('data')[0]['user']['id']);
+}
+    /**
+     * @test
+     */
+
+    public function itReturnCountOfActiveReservations()
+    {
+        
+        $office = Office::factory()->create();
+        
+        Reservation::factory()->for($office)->create(['status' => Reservation::STATUS_ACTIVE]);
+        Reservation::factory()->for($office)->create(['status' => Reservation::STATUS_ACTIVE]);
+
+        Reservation::factory()->create(['status' => Reservation::STATUS_ACTIVE]);
+
+        $response = $this->get('/api/offices');
+
+        $response->assertOk();
+
+        $this->assertEquals(1, $response->json('data')[0]['reservations_count'] );
+
+    }
+
+    /**
+     * @test
+     */
+
+    public function itShowsTheOffice():void
+    {
+
+        $user = User::factory()->create();
+        $tag = Tag::factory()->create();
+        $office = Office::factory()->for($user)->create();
+        
+        
+        $office->tags()->attach($tag);
+        $office->images()->create(['path' => 'image.pps']);
+        
+        Reservation::factory()->for($office)->create(['status' => Reservation::STATUS_ACTIVE]);
+        Reservation::factory()->for($office)->create(['status' => Reservation::STATUS_ACTIVE]);
+
+        Reservation::factory()->create(['status' => Reservation::STATUS_ACTIVE]);
+        
+        
+        $response = $this->get('/api/offices/'.$office->id);
+
+        $response->dump();
+
+        $response->assertOk();
+
+        $this->assertEquals(2, $response->json('data')['reservations_count'] );
+ 
+    } 
+
+
 
 
 

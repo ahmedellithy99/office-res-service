@@ -16,17 +16,40 @@ class OfficeController extends Controller
 
         
         $offices = Office::query()
+                
                 ->where('approval_status' , Office::APPROVAL_APPROVED)
                 ->where('hidden' , false)
-                ->when(request('host_id') , fn($builder) => $builder->where('user_id' , request('host_id')))
-                ->when(request('user_id') , fn(Builder $builder) => $builder->whereRelation('reservations','user_id' , request('user_id')))
+                ->when(request('user_id') , fn($builder) => $builder->where('user_id' , request('user_id')))
+                ->when(request('visitor_id') , fn(Builder $builder) => $builder->whereRelation('reservations','user_id' , request('visitor_id')))
                 ->orderBy('id' , 'DESC')
-                ->get();
+                ->with(['user' , 'tags' , 'images'])
+                ->withCount(['reservations' => fn($builder) => $builder->where('status' , Reservation::STATUS_ACTIVE)])
+                ->paginate(20);
         
-
+            
         
         $resource = OfficeResource::collection($offices) ;
 
         return $resource;
+
+        // foreach($resource as $re){
+        //     echo('<pre>');
+        //     var_dump($re);
+        //     echo('</pre>');
+
+        // }
+
+    }
+
+    public function show(Office $office)
+    {
+
+        Office::factory()->create();
+        
+        $office->loadCount(
+            ['reservations' => fn($builder) => $builder->where('status' , Reservation::STATUS_ACTIVE)])
+            ->load(['user' , 'tags' , 'images']); 
+
+        return OfficeResource::make($office);
     }
 }
