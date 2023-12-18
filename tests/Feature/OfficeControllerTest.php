@@ -46,7 +46,7 @@ class OfficeControllerTest extends TestCase
         
         $response = $this->get('/api/offices');
 
-        $response->dump();
+        
         
         $this->assertNotNull($response->json('data')[0]['id']);
         $this->assertNotNull($response->json('meta'));
@@ -196,13 +196,135 @@ class OfficeControllerTest extends TestCase
         
         $response = $this->get('/api/offices/'.$office->id);
 
-        $response->dump();
-
         $response->assertOk();
 
         $this->assertEquals(2, $response->json('data')['reservations_count'] );
- 
-    } 
+
+    }
+    
+    /**
+     * @test
+     */
+    public function itCreateAnOffice()
+
+    {
+        $this->withoutExceptionHandling();
+
+
+        $tag = Tag::factory()->create();
+        $tag2 = Tag::factory()->create();
+
+        $user = User::factory()->createQuietly();
+
+        $this->actingAs($user);
+
+        $response = $this->postJson('/api/offices' , 
+            [
+                'title' => 'Office in AbuHommos',
+                'description' => 'Description',
+                'lat' => '58.199681920950',
+                'lng' => '38.445535899732',
+                'address_line1' => 'Abo Hommos',
+                'price_per_day' =>10_000,
+                'monthly_discount' => 5,
+                'tags' =>[
+                    $tag->id  , $tag2->id
+                ]
+            ]);
+
+        $response->assertCreated()
+                ->assertJsonPath('data.title' , 'Office in AbuHommos')
+                ->assertJsonPath('data.approval_status' , Office::APPROVAL_PENDING)
+                ->assertJsonPath('data.user.id' , $user->id);
+
+        $this->assertDatabaseHas('offices' , ['title' =>'Office in AbuHommos' ]);
+
+    }
+
+    /**
+     * @test
+     */
+
+    public function itAllowsOnlyTokendUsers():void
+    {
+        // $this->withoutExceptionHandling();
+
+
+        $user = User::factory()->createQuietly();
+
+        $token = $user->createToken('test',['aa']);
+
+        $response = $this->postJson('/api/offices' , 
+            [],
+            [
+                'Authorization' => 'Bearer '.$token->plainTextToken 
+            ]);
+
+        $response->assertForbidden();
+
+    }
+
+    /**
+     * @test
+     */
+
+    public function itUpdateTheOffice():void
+    {
+        
+
+        $user = User::factory()->create();
+        $tags = Tag::factory(2)->create();
+        $anotherTag = Tag::factory()->create();
+
+        $office = Office::factory()->for($user)->create();
+        
+        $office->tags()->sync($tags);
+        
+        
+        
+        $token = $user->createToken('test',['office.update']);
+
+
+
+        $response = $this->putJson('/api/offices/'.$office->id , 
+            ['title' => 'Office in Alex',
+            'tags' => [$tags[0]->id , $anotherTag->id]],
+            [
+                'Authorization' => 'Bearer '.$token->plainTextToken 
+            ]);
+
+        
+        $response->assertOk();
+        
+        $response->assertJsonCount(2 ,'data.tags' );
+
+
+        $response->assertJsonPath('data.title' , 'Office in Alex');
+
+    }
+
+    /**
+     * @test
+     */
+
+    public function itDoesnotUpdateUnAuthoziedUser():void
+    {
+        $user = User::factory()->create();
+        $anotherUser = User::factory()->create();
+        $office = Office::factory()->for($anotherUser)->create();
+
+
+        $this->actingAs($user);
+
+        $respnose = $this->putJson('api/offices/'.$office->id , 
+        ['title' => 'a4a']
+        );
+
+        $respnose->assertForbidden();
+
+
+    }
+
 
 
 
