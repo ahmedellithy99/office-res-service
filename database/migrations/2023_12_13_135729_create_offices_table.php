@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->index();
             $table->string('title');
             $table->text('description');
+            $table->foreignId('featured_image_id')->index()->nullable();
             $table->decimal('lat',11 ,8);
             $table->decimal('lng',11 ,8);
             $table->text('address_line1');

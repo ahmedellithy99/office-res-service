@@ -40,13 +40,14 @@ class OfficePolicy
         return $user->id ==$office->user_id ;
     }
 
-    // /**
-    //  * Determine whether the user can delete the model.
-    //  */
-    // public function delete(User $user, Office $office): bool
-    // {
-    //     //
-    // }
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, Office $office): bool
+    {
+        return $user->id ==$office->user_id ;
+        
+    }
 
     // /**
     //  * Determine whether the user can restore the model.

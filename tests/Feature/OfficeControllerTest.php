@@ -7,9 +7,11 @@ use App\Models\Office;
 use App\Models\Reservation;
 use App\Models\Tag;
 use App\Models\User;
+use App\Notifications\OfficeApprovalPending;
 use Database\Factories\OfficeFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class OfficeControllerTest extends TestCase
@@ -79,7 +81,32 @@ class OfficeControllerTest extends TestCase
 
     }
 
-     /**
+
+    /**
+     * @test
+     */
+    public function itListsAllHiddenAndUnApprovedOnesIfTheUserIsAuthenticated(): void
+    {
+
+        // $this->withoutExceptionHandling();
+        $user = User::factory()->create();
+
+        Office::factory(3)->for($user)->create();
+        Office::factory()->for($user)->create(['hidden' => true]);
+        Office::factory()->for($user)->create(['approval_status' => Office::APPROVAL_PENDING]);
+        
+        $this->actingAs($user);
+        
+        $response = $this->get('/api/offices?user_id='.$user->id);
+        
+        $this->assertCount(5, $response->json('data'));
+        
+        
+
+    }
+
+
+    /**
      * @test
      */
 
@@ -210,6 +237,11 @@ class OfficeControllerTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
+        Notification::fake();
+        
+        $admin = User::factory()->create(['is_admin' => true]);
+
+
 
         $tag = Tag::factory()->create();
         $tag2 = Tag::factory()->create();
@@ -238,6 +270,11 @@ class OfficeControllerTest extends TestCase
                 ->assertJsonPath('data.user.id' , $user->id);
 
         $this->assertDatabaseHas('offices' , ['title' =>'Office in AbuHommos' ]);
+
+        Notification::assertSentTo(
+            [$admin], OfficeApprovalPending::class
+        );
+
 
     }
 
@@ -278,7 +315,7 @@ class OfficeControllerTest extends TestCase
 
         $office = Office::factory()->for($user)->create();
         
-        $office->tags()->sync($tags);
+        $office->tags()->attach($tags);
         
         
         
@@ -307,6 +344,69 @@ class OfficeControllerTest extends TestCase
      * @test
      */
 
+    public function itUpdatesFeaturedImage():void
+    {
+        
+
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+        
+        $image = $office->images()->create([
+            'path' => 'salma.png'
+        ]);
+    
+    
+        $this->actingAs($user);
+        
+        $response = $this->putJson('/api/offices/'.$office->id , 
+            [
+                'featured_image_id' => $image->id
+            ]);
+        
+        $response->assertOk();
+
+        // dd($response->json());
+
+
+        $response->assertJsonPath('data.featured_image_id' , $image->id);
+
+        }
+
+        /**
+     * @test
+     */
+
+    public function itUpdatesAnotherOfficeFeaturedImage():void
+    {
+        
+
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+        $office2 = Office::factory()->for($user)->create();
+        
+        
+        $image = $office2->images()->create([
+            'path' => 'salma.png'
+        ]);
+    
+    
+        $this->actingAs($user);
+        
+        $response = $this->putJson('/api/offices/'.$office->id , 
+            [
+                'featured_image_id' => $image->id
+            ]);
+        
+        $response->assertUnprocessable()->assertInvalid('featured_image_id');
+
+
+        }
+
+
+    /**
+     * @test
+     */
+
     public function itDoesnotUpdateUnAuthoziedUser():void
     {
         $user = User::factory()->create();
@@ -316,18 +416,85 @@ class OfficeControllerTest extends TestCase
 
         $this->actingAs($user);
 
-        $respnose = $this->putJson('api/offices/'.$office->id , 
+        $response = $this->putJson('api/offices/'.$office->id , 
         ['title' => 'a4a']
         );
 
-        $respnose->assertForbidden();
+        $response->assertForbidden();
 
 
     }
 
+    /**
+     * @test
+     */
+
+    public function itChangingApprovalStatusToPendingIfItIsDirty():void
+    {
+        $user = User::factory()->create(['is_admin' => true]);
+        $office = Office::factory()->for($user)->create();
+
+        Notification::fake();
+        
+        $this->actingAs($user);
+        
+        $response = $this->putJson('api/offices/'.$office->id , 
+        ['price_per_day' => '1234']
+        );
+
+        $response->assertJsonPath('data.approval_status' , Office::APPROVAL_PENDING);
+
+        $this->assertDatabaseHas('offices' , 
+        [
+            'id' => $office->id,
+            'approval_status' => Office::APPROVAL_PENDING
+        ]);
+
+        Notification::assertSentTo(
+            [$user], OfficeApprovalPending::class
+        );
+
+        $response->assertOk();
 
 
+    }
 
+    /**
+     * @test
+     */
+
+    public function itCanDeletTheOffice():void
+    {
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+
+        $this->actingAs($user);
+
+        $response = $this->delete('api/offices/'.$office->id);
+
+        $response->assertOk();
+    }
+
+
+    /**
+     * @test
+     */
+
+    public function itCannotDeletTheOffice():void
+    {
+        $user = User::factory()->create();
+
+        $office = Office::factory()->for($user)->create();
+
+        Reservation::factory()->for($office)->create();
+
+        $this->actingAs($user);
+
+        $response = $this->delete('api/offices/'.$office->id);
+
+        $response->assertStatus(302);
+    }
+    
 
 
 }

@@ -31,7 +31,7 @@
 #### Create office endpoint 
 
 [x] Host must be authenicated & email verfied 
-[] Token (if exists) must allow `office.create`
+[x] Token (if exists) must allow `office.create`
 [x] Validation 
 
 # TODO 
@@ -45,24 +45,24 @@
 [x] Token (if exists) must allow `office.update`
 [x] Can only update their own offices
 [x] Validation 
-[] Mark as pending when critical attributes are updated and notify admin 
+[x] Mark as pending when critical attributes are updated and notify admin 
 
 ## Create Office Endpoint 
 
-[] Notify admin ion new office
+[x] Notify admin ion new office
 
 ## Delete Office Endpoint 
 
-[] Must be authenticated & email verified
-[] Token (if exists) must allowa `office.delete`
-[] Can only delete their own offices
-[] Cannot delete an office that has reservation 
+[x] Must be authenticated & email verified
+[x] Token (if exists) must allowa `office.delete`
+[x] Can only delete their own offices
+[x] Cannot delete an office that has reservation 
 
 ### Office Photo
 
-[] Attaching photos to an office 
-[] Allow choosing a photo t become the featured photo 
-[] Deleting a photo 
+[x] Attaching photos to an office 
+[x] Allow choosing a photo t become the featured photo 
+[x] Deleting a photo 
 - Must have at least one photo if it`s approved
 
 ### Update Office Endpoint

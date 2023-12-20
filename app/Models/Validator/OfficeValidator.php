@@ -19,7 +19,7 @@ class OfficeValidator
             'address_line1' => [Rule::when($office->exists , 'sometimes') ,'required' , 'string'],
             'price_per_day' => [Rule::when($office->exists , 'sometimes') ,'required' , 'integer'],
             
-            
+            'featured_image_id' =>[Rule::exists('images' , 'id')->where('resource_type' , 'office')->where('resource_id' , $office->id)],
             'monthly_discount' => ['integer' , 'min:0'],
             'hidden' => ['bool'] , 
             'tags' =>['array'],
