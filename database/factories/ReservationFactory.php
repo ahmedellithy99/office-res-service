@@ -30,8 +30,6 @@ class ReservationFactory extends Factory
             'status'=> Reservation::STATUS_ACTIVE ,
             'start_date' => now()->addDay(1)->format('Y-m-d'),
             'end_date' => now()->addDay(5)->format('Y-m-d'),
-
-
         ];
     }
 }

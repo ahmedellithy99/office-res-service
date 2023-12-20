@@ -49,7 +49,7 @@
 
 ## Create Office Endpoint 
 
-[x] Notify admin ion new office
+[x] Notify admin on a new office
 
 ## Delete Office Endpoint 
 
@@ -65,29 +65,15 @@
 [x] Deleting a photo 
 - Must have at least one photo if it`s approved
 
-### Update Office Endpoint
-
-[] Must be authenticated & email verified 
-[] Token (if exists) must allow `office.update`
-[] Can only update their offices
-[] Validation 
-
-## Delete Office Endponit 
-
-[] Must be authenticated & email verified 
-[] Token (if exists) must allow `office.delete`
-[] Can only delete their own offices
-
 ## List Reservations Endponit 
 
-[] Must be authenticated & email verified
-[] Token (if exists) must allow `reservations.show`
-[] Can only lost their own reservations or reservatons on their offices
-[] Allow filtering by office_id
-[] Allow filtering by user_id
-[] Allow filtering by data range 
-[] Allow filtering by status
-[] Paginate
+[x] Must be authenticated & email verified
+[x] Token (if exists) must allow `reservations.show`
+[x] Can only list their own reservations or reservations on their offices
+[x] Allow filtering by office_id
+[x] Allow filtering by user_id
+[x] Allow filtering by date range 
+[x] Paginate
 
 ## Make Reservations Endpint 
 
@@ -100,7 +86,7 @@
 [] Email user & host on a reservation start day 
 [] Generate WIFI passord for new reservations (store encrypted)
 
-## Cance Reservation Endpoint 
+## Cancel Reservation Endpoint 
 
 [] Must be authenticated & email verified
 [] Token (if exists) must allow `reservations.cancel`

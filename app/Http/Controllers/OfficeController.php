@@ -68,11 +68,8 @@ class OfficeController extends Controller
 
     {
         
-
-        
         if(!auth()->user()->tokenCan('office.create')){
             abort(403);
-            
         }
 
         $attributes = (new OfficeValidator())->validate(
