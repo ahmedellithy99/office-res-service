@@ -77,11 +77,11 @@
 
 ## Make Reservations Endpint 
 
-[] Must be authenticated & email verified
-[] Token (if exists) must allow `reservations.make`
-[] Cannot make reservations on their own property
-[] Validate on other reservation conflict with the same time 
-[] Use locks to make the process atomic 
+[x] Must be authenticated & email verified
+[x] Token (if exists) must allow `reservations.make`
+[x] Cannot make reservations on their own property
+[x] Validate on other reservation conflict with the same time 
+[x] Use locks to make the process atomic 
 [] Email user & host when a reservation is made 
 [] Email user & host on a reservation start day 
 [] Generate WIFI passord for new reservations (store encrypted)

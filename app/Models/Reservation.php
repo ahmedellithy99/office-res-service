@@ -13,6 +13,9 @@ class Reservation extends Model
     const STATUS_ACTIVE = 1 ; 
     const STATUS_CANCELLED = 2 ;
 
+    protected $guarded =[];
+
+
     protected $cast = [
         'price' => 'integer' ,
         'status' => 'integer',
@@ -27,6 +30,11 @@ class Reservation extends Model
     public function office():BelongsTo
     {
         return $this->belongsTo(Office::class);
+    }
+
+    public function scopeActiveBetween($query , $from , $to)
+    {
+        $query->where('status' , Reservation::STATUS_ACTIVE)->betweenDates($from , $to) ;
     }
 
     public function scopeBetweenDates($query , $from , $to)
