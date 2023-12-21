@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ReservationResource;
+use App\Models\Office;
 use App\Models\Reservation;
 use App\Models\User;
-
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class UserReservationController extends Controller
 
@@ -48,22 +51,46 @@ class UserReservationController extends Controller
 
     }
 
-    public function show(User $user)
+    public function create()
     {
-        if(!(auth()->user()->id == $user->id))
-        {
+        if(!auth()->user()->tokenCan('reservations.show')){
+            Response::HTTP_FORBIDDEN;
             abort(403);
         }
 
+        validator(request()->all() , 
+        [
+            'office_id' => ['required' , 'integer'],
+            'start_date' => ['required' , 'date:Y-m-d'],
+            'end_date' => ['required' , 'date:Y-m-d'],
+
+        ]
+        )->validate();
+
+        try{
+            $office = Office::findOrFail(request('office_id'));
+        } 
+        catch (ModelNotFoundException $e){
+            throw ValidationException::withMessages([
+                'office_id' => 'Invalid office_id'
+            ]);
+        }
+
+        if($office->user_id == auth()->id){
+            
+            throw ValidationException::withMessages([
+                'office_id' => 'You cannot make a reservation on your own office'
+            ]);
+        }
+
         
-        $reservations = Reservation::query()
-                                    ->where('user_id' ,  $user->id )
-                                    
-                                    ->get();
 
 
-        return ReservationResource::collection($reservations);
 
 
+        
+        
     }
+
+    
 }

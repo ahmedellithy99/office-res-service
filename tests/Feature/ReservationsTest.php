@@ -14,26 +14,7 @@ class ReservationsTest extends TestCase
 {
 
     use RefreshDatabase;
-    /**
-     * @test
-     */
-    
-    
-    public function itPreventsFetchingSomeoneElseRes(): void
-    {
 
-        // $this->withoutExceptionHandling();
-        $user = User::factory()->create();
-        
-        $anotherUser = User::factory()->create();
-
-        $this->actingAs($anotherUser);
-
-
-        $response = $this->getJson('api/reservations/'.$user->id);
-
-        $response->assertStatus(403);
-    }
     /**
      * @test
      */
@@ -72,22 +53,29 @@ class ReservationsTest extends TestCase
         $fromDate = '2023-03-03';
         $toDate = '2023-04-04';
         
-        $reservation1 = Reservation::factory()->for($user)->create([
+        $reservations = Reservation::factory()->for($user)->createMany([
+            [
             'start_date' => '2023-03-01',
             'end_date' => '2023-03-15'
-        ]);
-        
-        
-        
-        $reservation2 = Reservation::factory()->for($user)->create([
+            ],
+            
+            [
             'start_date' => '2023-03-25',
             'end_date' => '2023-04-25'
-        ]);
-        
-        $reservation3 = Reservation::factory()->for($user)->create([
+            ],
+            
+            [
             'start_date' => '2023-03-25',
             'end_date' => '2023-03-29'
+            ]
+            ,
+            [
+            'start_date' => '2023-03-01',
+            'end_date' => '2023-04-29'
+            ]
+
         ]);
+        
 
         Reservation::factory()->for($user)->create([
             'start_date' => '2023-02-15',
@@ -118,9 +106,9 @@ class ReservationsTest extends TestCase
         // );
 
 
-        $response->assertJsonCount(3 , 'data');
+        $response->assertJsonCount(4 , 'data');
 
-        $this->assertEquals([$reservation1->id , $reservation2->id , $reservation3->id] , collect($response->json('data'))->pluck('id')->toArray()) ;
+        $this->assertEquals($reservations->pluck('id')->toArray() , collect($response->json('data'))->pluck('id')->toArray()) ;
 
     }
 
