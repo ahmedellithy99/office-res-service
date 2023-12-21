@@ -77,7 +77,7 @@
 
 ## Make Reservations Endpint 
 
-[x] Must be authenticated & email verified
+[] Must be authenticated & email verified
 [] Token (if exists) must allow `reservations.make`
 [] Cannot make reservations on their own property
 [] Validate on other reservation conflict with the same time 
